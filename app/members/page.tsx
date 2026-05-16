@@ -1,156 +1,185 @@
 'use client';
 
-import { useChoirStore } from '@/lib/store';
-import MemberCard from '@/components/MemberCard';
-import { Plus, Music } from 'lucide-react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { Header } from '@/components/Header';
+import { Navigation } from '@/components/Navigation';
+import { MemberCard } from '@/components/MemberCard';
+import { useChoirStore } from '@/store/choirStore';
+import type { Member } from '@/types/index';
+
+const COLORS = [
+  '#d8b4fe', // purple
+  '#fcd34d', // yellow
+  '#7dd3fc', // sky
+  '#fda4af', // rose
+  '#86efac', // green
+  '#a78bfa', // indigo
+];
 
 export default function MembersPage() {
-  const { members, addMember } = useChoirStore();
-  const [showForm, setShowForm] = useState(false);
-  const [filterSection, setFilterSection] = useState<string | 'all'>('all');
+  const [mounted, setMounted] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [memberName, setMemberName] = useState('');
+  const [memberRole, setMemberRole] = useState<'soprano' | 'alto' | 'tenor' | 'bass'>('soprano');
+  const [memberColor, setMemberColor] = useState(COLORS[0]);
 
-  const sections = ['soprano', 'alto', 'tenor', 'bass', 'unassigned'] as const;
-  const filteredMembers =
-    filterSection === 'all'
-      ? members
-      : members.filter((m) => m.section === filterSection);
+  const loadFromStorage = useChoirStore((state) => state.loadFromStorage);
+  const saveToStorage = useChoirStore((state) => state.saveToStorage);
+  const members = useChoirStore((state) => state.members);
+  const addMember = useChoirStore((state) => state.addMember);
+  const removeMember = useChoirStore((state) => state.removeMember);
 
-  const handleAddMember = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  useEffect(() => {
+    loadFromStorage();
+    setMounted(true);
+    return () => saveToStorage();
+  }, [loadFromStorage, saveToStorage]);
 
-    const newMember = {
-      id: Date.now().toString(),
-      name: formData.get('name') as string,
-      avatarColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
-      section: formData.get('section') as any,
-      joinDate: new Date().toISOString().split('T')[0],
-      completedTasks: 0,
-      totalTasks: 0,
-    };
+  if (!mounted) return null;
 
-    addMember(newMember);
-    setShowForm(false);
-    e.currentTarget.reset();
+  const handleAddMember = () => {
+    if (!memberName.trim()) return;
+    addMember({
+      name: memberName,
+      role: memberRole,
+      color: memberColor,
+      joinedDate: new Date().toISOString(),
+    });
+    setMemberName('');
+    setMemberRole('soprano');
+    setMemberColor(COLORS[0]);
+    setShowAddMember(false);
+  };
+
+  const groupedByRole = {
+    soprano: members.filter((m) => m.role === 'soprano'),
+    alto: members.filter((m) => m.role === 'alto'),
+    tenor: members.filter((m) => m.role === 'tenor'),
+    bass: members.filter((m) => m.role === 'bass'),
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
-            <Music className="w-10 h-10 text-choir-purple" />
-            Choir Members
-          </h1>
-          <p className="text-gray-600 mt-2">{filteredMembers.length} singers</p>
-        </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-gradient-to-r from-choir-purple to-choir-pink text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add Member
-        </button>
-      </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 dark:bg-slate-900">
+      <Header />
+      <Navigation />
 
-      {/* Add Member Form */}
-      {showForm && (
-        <div className="bg-white rounded-lg p-8 shadow-md border-2 border-choir-purple">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Member</h2>
-          <form onSubmit={handleAddMember} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name
-              </label>
+      <main className="flex-grow p-4 md:p-8 pb-20 md:pb-8 md:ml-64 mt-0">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Page Header */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Choir Members</h1>
+            <button
+              onClick={() => setShowAddMember(!showAddMember)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Member
+            </button>
+          </div>
+
+          {/* Add Member Form */}
+          {showAddMember && (
+            <div className="card border-2 border-primary-500 space-y-4">
+              <h2 className="text-xl font-bold">Add New Member</h2>
               <input
                 type="text"
-                name="name"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-choir-purple focus:border-transparent"
-                placeholder="Singer's name"
+                placeholder="Member Name"
+                value={memberName}
+                onChange={(e) => setMemberName(e.target.value)}
+                className="input-field"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Vocal Section
-              </label>
               <select
-                name="section"
-                defaultValue="unassigned"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-choir-purple focus:border-transparent"
+                value={memberRole}
+                onChange={(e) => setMemberRole(e.target.value as any)}
+                className="input-field"
               >
-                <option value="unassigned">Unassigned</option>
-                <option value="soprano">Soprano</option>
-                <option value="alto">Alto</option>
-                <option value="tenor">Tenor</option>
-                <option value="bass">Bass</option>
+                <option value="soprano">Soprano 🎵</option>
+                <option value="alto">Alto 🎶</option>
+                <option value="tenor">Tenor 🎼</option>
+                <option value="bass">Bass 🎹</option>
               </select>
+              <div>
+                <label className="text-sm font-semibold mb-2 block">
+                  Avatar Color
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setMemberColor(color)}
+                      className={`w-12 h-12 rounded-lg border-4 transition-all ${
+                        memberColor === color
+                          ? 'border-slate-900 dark:border-white scale-110'
+                          : 'border-transparent'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={handleAddMember} className="btn-primary flex-1">
+                  Add Member
+                </button>
+                <button
+                  onClick={() => setShowAddMember(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
+          )}
 
-            <div className="flex gap-3">
+          {/* Members by Voice Part */}
+          <div className="space-y-8">
+            {(Object.entries(groupedByRole) as [string, Member[]][]).map(
+              ([role, roleMembers]) =>
+                roleMembers.length > 0 && (
+                  <section key={role}>
+                    <h2 className="text-2xl font-bold mb-4 capitalize">
+                      {role === 'soprano'
+                        ? '🎵 Sopranos'
+                        : role === 'alto'
+                        ? '🎶 Altos'
+                        : role === 'tenor'
+                        ? '🎼 Tenors'
+                        : '🎹 Basses'}
+                    </h2>
+                    <div className="space-y-4">
+                      {roleMembers.map((member) => (
+                        <MemberCard
+                          key={member.id}
+                          member={member}
+                          onRemove={() => {
+                            if (window.confirm(`Remove ${member.name}?`)) {
+                              removeMember(member.id);
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+            )}
+          </div>
+
+          {members.length === 0 && (
+            <div className="card text-center py-12">
+              <p className="text-slate-500 dark:text-slate-400 mb-4">
+                No members yet. Add your first choir member to get started!
+              </p>
               <button
-                type="submit"
-                className="flex-1 bg-choir-purple text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                onClick={() => setShowAddMember(true)}
+                className="btn-primary"
               >
-                Add Member
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-              >
-                Cancel
+                Add First Member
               </button>
             </div>
-          </form>
+          )}
         </div>
-      )}
-
-      {/* Filter by Section */}
-      <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => setFilterSection('all')}
-          className={`px-4 py-2 rounded-full font-semibold transition-all ${
-            filterSection === 'all'
-              ? 'bg-choir-purple text-white'
-              : 'bg-white text-gray-800 border border-gray-300 hover:border-choir-purple'
-          }`}
-        >
-          All ({members.length})
-        </button>
-        {sections.map((section) => {
-          const count = members.filter((m) => m.section === section).length;
-          return (
-            <button
-              key={section}
-              onClick={() => setFilterSection(section)}
-              className={`px-4 py-2 rounded-full font-semibold transition-all capitalize ${
-                filterSection === section
-                  ? 'bg-choir-purple text-white'
-                  : 'bg-white text-gray-800 border border-gray-300 hover:border-choir-purple'
-              }`}
-            >
-              {section} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Members Grid */}
-      {filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMembers.map((member) => (
-            <MemberCard key={member.id} member={member} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No members in this section yet.</p>
-        </div>
-      )}
+      </main>
     </div>
   );
 }

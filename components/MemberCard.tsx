@@ -1,57 +1,77 @@
 'use client';
 
-import Link from 'next/link';
-import { Member } from '@/lib/types';
-import { ChevronRight } from 'lucide-react';
+import React from 'react';
+import { Trash2, Award } from 'lucide-react';
+import type { Member } from '@/types/index';
 
 interface MemberCardProps {
   member: Member;
+  onRemove?: (memberId: string) => void;
+  showPoints?: boolean;
+  rank?: number;
 }
 
-export default function MemberCard({ member }: MemberCardProps) {
-  const completionPercentage = Math.round(
-    (member.completedTasks / member.totalTasks) * 100
-  );
+export function MemberCard({
+  member,
+  onRemove,
+  showPoints = true,
+  rank,
+}: MemberCardProps) {
+  const getBadgeForPoints = (points: number) => {
+    if (points >= 100) return '⭐';
+    if (points >= 50) return '🌟';
+    if (points >= 25) return '✨';
+    return '💫';
+  };
 
   return (
-    <Link href={`/members/${member.id}`}>
-      <div className="task-card-hover bg-white rounded-lg p-6 border-2 border-transparent hover:border-choir-purple">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div
-              className="avatar-badge text-white"
-              style={{ backgroundColor: member.avatarColor }}
-            >
-              {member.name.charAt(0)}
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">{member.name}</h3>
-              <p className="text-sm text-gray-500 capitalize">{member.section}</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-choir-purple" />
+    <div className="card flex items-center gap-4 relative overflow-hidden">
+      {/* Rank badge (leaderboard only) */}
+      {rank && (
+        <div className="absolute top-2 right-2 bg-accent-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+          #{rank}
         </div>
+      )}
 
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Tasks</span>
-            <span className="text-sm font-bold text-choir-purple">
-              {member.completedTasks}/{member.totalTasks}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-choir-purple to-choir-pink h-2 rounded-full progress-fill"
-              style={{ width: `${completionPercentage}%` }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">{completionPercentage}% complete</p>
-        </div>
-
-        <div className="text-xs text-gray-400">
-          Joined {new Date(member.joinDate).toLocaleDateString()}
-        </div>
+      {/* Avatar */}
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg flex-shrink-0"
+        style={{ backgroundColor: member.color }}
+      >
+        {member.name.charAt(0).toUpperCase()}
       </div>
-    </Link>
+
+      {/* Info */}
+      <div className="flex-grow">
+        <h3 className="font-bold text-lg">{member.name}</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 capitalize">
+          {member.role} • Joined {new Date(member.joinedDate).toLocaleDateString()}
+        </p>
+      </div>
+
+      {/* Points & Badge */}
+      {showPoints && (
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+              {member.points}
+            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Points</p>
+          </div>
+          <span className="text-xl">{getBadgeForPoints(member.points)}</span>
+        </div>
+      )}
+
+      {/* Remove button */}
+      {onRemove && (
+        <button
+          onClick={() => onRemove(member.id)}
+          className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors flex-shrink-0"
+          aria-label="Remove member"
+        >
+          <Trash2 className="w-5 h-5 text-red-500" />
+        </button>
+      )}
+    </div>
   );
 }

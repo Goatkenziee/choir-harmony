@@ -1,41 +1,55 @@
-# Children's Choir App – Build Plan
+# Children's Choir App — PLAN
 
 ## Goal
-Build a beautiful, user-friendly app to track choir member tasks, attendance, progress, and practice assignments with an engaging UI designed for young users and parents.
+Build a beautiful, kid-friendly app to track choir chores, manage members, assignments, and engagement with a colorful, intuitive UI.
 
 ## Stack
 - **Framework:** Next.js 14 (App Router) + React 18 + TypeScript
-- **Styling:** TailwindCSS 3 + Shadcn/ui (pre-built accessible components)
-- **State:** Zustand (lightweight client state)
-- **Data:** Local storage + localStorage for persistence (no backend initially)
+- **Styling:** TailwindCSS 3 + custom color palette (vibrant, kid-friendly)
+- **State:** Zustand (lightweight state management)
+- **Database:** localStorage (client-side persistence) + optional Supabase later
+- **Icons:** lucide-react (clean, simple icons)
 - **Deploy:** Vercel
-- **Icons:** Lucide React
 
 ## File Tree
-- `app/layout.tsx` — root layout with navigation
-- `app/globals.css` — TailwindCSS + global styles
-- `app/page.tsx` — dashboard landing page with choir overview
-- `app/members/page.tsx` — choir member list + management
-- `app/members/[id]/page.tsx` — individual member profile & task tracking
-- `app/tasks/page.tsx` — all assigned tasks & chores view
-- `app/practice/page.tsx` — practice schedule & progress
-- `components/MemberCard.tsx` — member card component
-- `components/TaskCard.tsx` — task/chore card component
-- `components/ProgressBar.tsx` — visual progress indicator
-- `components/Navigation.tsx` — top nav bar
-- `lib/store.ts` — Zustand store (members, tasks, progress)
-- `lib/types.ts` — TypeScript interfaces
-- `package.json` — dependencies
+- `package.json` — dependencies (Next.js, React, TailwindCSS, Zustand, lucide-react)
 - `tsconfig.json` — TypeScript config
-- `tailwind.config.ts` — Tailwind config
-- `postcss.config.js` — PostCSS config
+- `tailwind.config.ts` — TailwindCSS config with custom color palette
+- `postcss.config.js` — PostCSS for Tailwind
 - `next.config.mjs` — Next.js config
+- `app/layout.tsx` — root layout with header + nav
+- `app/globals.css` — global styles + Tailwind directives
+- `app/page.tsx` — dashboard/home page
+- `app/chores/page.tsx` — chores list & assignment page
+- `app/members/page.tsx` — choir members directory
+- `app/leaderboard/page.tsx` — gamified leaderboard (points for completed chores)
+- `app/settings/page.tsx` — app settings & theme toggle
+- `components/ChoreCard.tsx` — individual chore card component
+- `components/MemberCard.tsx` — individual member card component
+- `components/Header.tsx` — app header with logo
+- `components/Navigation.tsx` — bottom/side navigation
+- `store/choirStore.ts` — Zustand store (members, chores, assignments, points)
+- `types/index.ts` — TypeScript interfaces (Member, Chore, Assignment, etc.)
+- `lib/utils.ts` — utility functions
+- `README.md` — project documentation (LAST)
 
 ## Data / API
-None initially — all data stored in localStorage. Can be extended with a backend API later.
+- **localStorage:** persist members, chores, assignments, points
+- **No external APIs required initially** — pure client-side app
+- **Optional future:** Supabase for multi-device sync, real-time updates
 
-## Open Questions (Defaults Selected)
-- **Choir size?** Assuming 20–50 members. System scales.
-- **Task types?** Attendance, practice, solos, sections, behavior. Defaulting to generic task system.
-- **User roles?** Choir director + member parents. Defaulting to single-role UI (can expand).
-- **Theme?** Bright, colorful, kid-friendly with a music theme. Using purples, music notes.
+## Open Questions & Defaults
+1. **Color palette?** → Using vibrant, kid-friendly colors: purple, pink, teal, yellow, orange (animated accent colors)
+2. **Member management?** → Admin can add/edit/remove choir members; each gets a profile with points
+3. **Chore types?** → Sing warm-ups, learn music, attend practice, help setup, lead section, etc.
+4. **Gamification?** → Points per chore completion → leaderboard → visual badges/stars
+5. **Dark mode?** → Yes, toggle in settings, persists to localStorage
+
+## Success Criteria
+✓ Dashboard with quick-add chore/member buttons
+✓ Chores page: list all chores, assign to members, mark complete
+✓ Members page: directory with photos, roles, points
+✓ Leaderboard: top performers with visual rewards
+✓ Beautiful, kid-friendly UI with smooth animations
+✓ Mobile-responsive design
+✓ Data persists across sessions

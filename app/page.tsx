@@ -1,162 +1,147 @@
 'use client';
 
-import { useChoirStore } from '@/lib/store';
-import MemberCard from '@/components/MemberCard';
-import TaskCard from '@/components/TaskCard';
-import ProgressBar from '@/components/ProgressBar';
-import { Users, CheckSquare, Music, Calendar } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plus, Zap, Users, Target } from 'lucide-react';
+import { Header } from '@/components/Header';
+import { Navigation } from '@/components/Navigation';
+import { ChoreCard } from '@/components/ChoreCard';
+import { MemberCard } from '@/components/MemberCard';
+import { useChoirStore } from '@/store/choirStore';
 
-export default function Dashboard() {
-  const { members, tasks, practices, completeTask } = useChoirStore();
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  const loadFromStorage = useChoirStore((state) => state.loadFromStorage);
+  const saveToStorage = useChoirStore((state) => state.saveToStorage);
+  const members = useChoirStore((state) => state.members);
+  const assignments = useChoirStore((state) => state.assignments);
+  const chores = useChoirStore((state) => state.chores);
 
-  const allTasksCompleted = tasks.filter((t) => t.status === 'completed').length;
-  const activeTasks = tasks.filter((t) => t.status !== 'completed');
-  const upcomingPractices = practices.filter((p) => new Date(p.date) >= new Date());
+  useEffect(() => {
+    loadFromStorage();
+    setMounted(true);
 
-  const totalMemberProgress = members.reduce(
-    (sum, m) => sum + (m.completedTasks / m.totalTasks),
-    0
-  );
-  const avgProgress = Math.round(
-    (totalMemberProgress / members.length) * 100
-  );
+    return () => saveToStorage();
+  }, [loadFromStorage, saveToStorage]);
+
+  if (!mounted) return null;
+
+  const activeAssignments = assignments.filter((a) => !a.completed).slice(0, 5);
+  const topMembers = [...members].sort((a, b) => b.points - a.points).slice(0, 3);
+  const totalPoints = members.reduce((sum, m) => sum + m.points, 0);
+  const completedToday = assignments.filter(
+    (a) =>
+      a.completed &&
+      new Date(a.completedDate!).toDateString() === new Date().toDateString()
+  ).length;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-choir-purple via-choir-pink to-choir-blue bg-clip-text text-transparent mb-3">
-          Choir Harmony Dashboard
-        </h1>
-        <p className="text-gray-600 text-lg">
-          Manage your choir, track progress, and celebrate achievements together
-        </p>
-      </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 dark:bg-slate-900">
+      <Header />
+      <Navigation />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-6 shadow-md border-l-4 border-l-choir-purple">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Total Members</p>
-              <p className="text-3xl font-bold text-choir-purple mt-2">
-                {members.length}
-              </p>
+      <main className="flex-grow p-4 md:p-8 pb-20 md:pb-8 md:ml-64 md:mt-0 mt-0">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Hero Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="card bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+              <p className="text-sm opacity-90">Total Points</p>
+              <p className="text-3xl font-bold">{totalPoints}</p>
             </div>
-            <Users className="w-12 h-12 text-choir-purple opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-md border-l-4 border-l-choir-pink">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Tasks Completed</p>
-              <p className="text-3xl font-bold text-choir-pink mt-2">
-                {allTasksCompleted}
-              </p>
+            <div className="card bg-gradient-to-br from-success-500 to-success-600 text-white">
+              <p className="text-sm opacity-90">Members</p>
+              <p className="text-3xl font-bold">{members.length}</p>
             </div>
-            <CheckSquare className="w-12 h-12 text-choir-pink opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-md border-l-4 border-l-choir-blue">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Active Tasks</p>
-              <p className="text-3xl font-bold text-choir-blue mt-2">
-                {activeTasks.length}
-              </p>
+            <div className="card bg-gradient-to-br from-accent-500 to-accent-600 text-white">
+              <p className="text-sm opacity-90">Total Chores</p>
+              <p className="text-3xl font-bold">{chores.length}</p>
             </div>
-            <Music className="w-12 h-12 text-choir-blue opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-md border-l-4 border-l-choir-green">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium">Upcoming Practices</p>
-              <p className="text-3xl font-bold text-choir-green mt-2">
-                {upcomingPractices.length}
-              </p>
+            <div className="card bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+              <p className="text-sm opacity-90">Completed Today</p>
+              <p className="text-3xl font-bold">{completedToday}</p>
             </div>
-            <Calendar className="w-12 h-12 text-choir-green opacity-20" />
           </div>
-        </div>
-      </div>
 
-      {/* Choir Progress Overview */}
-      <div className="bg-white rounded-lg p-8 shadow-md">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Choir Progress</h2>
-        <ProgressBar
-          completed={members.reduce((sum, m) => sum + m.completedTasks, 0)}
-          total={members.reduce((sum, m) => sum + m.totalTasks, 0)}
-          label="Overall Completion"
-          showPercentage={true}
-          variant="large"
-        />
-        <p className="text-gray-600 mt-4 text-sm">
-          Average member progress: <span className="font-bold text-choir-purple">{avgProgress}%</span>
-        </p>
-      </div>
+          {/* Quick Actions */}
+          <div className="flex gap-3 flex-wrap">
+            <a
+              href="/chores"
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Chore
+            </a>
+            <a
+              href="/members"
+              className="btn-primary flex items-center gap-2"
+            >
+              <Users className="w-5 h-5" />
+              Add Member
+            </a>
+            <a
+              href="/leaderboard"
+              className="btn-secondary flex items-center gap-2"
+            >
+              <Zap className="w-5 h-5" />
+              View Leaderboard
+            </a>
+          </div>
 
-      {/* Featured Members */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Choir Members</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {members.map((member) => (
-            <MemberCard key={member.id} member={member} />
-          ))}
-        </div>
-      </div>
+          {/* Top Performers */}
+          {topMembers.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Target className="w-6 h-6 text-accent-500" />
+                Top Performers 🏆
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {topMembers.map((member, idx) => (
+                  <div key={member.id} className="card">
+                    <MemberCard member={member} showPoints={true} rank={idx + 1} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-      {/* Active Tasks */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Active Tasks</h2>
-        <div className="space-y-4">
-          {activeTasks.slice(0, 5).map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onComplete={(taskId) => {
-                // In a real app, would need to track per-member completion
-                completeTask(taskId, members[0].id);
-              }}
-              showComplete={false}
-            />
-          ))}
-          {activeTasks.length === 0 && (
-            <p className="text-gray-500 text-center py-8">
-              🎉 All tasks completed! Great job, choir!
-            </p>
+          {/* Active Assignments */}
+          {activeAssignments.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Active Assignments</h2>
+              <div className="space-y-3">
+                {activeAssignments.map((assignment) => {
+                  const chore = chores.find((c) => c.id === assignment.choreId);
+                  const member = members.find((m) => m.id === assignment.memberId);
+                  if (!chore || !member) return null;
+
+                  return (
+                    <ChoreCard
+                      key={assignment.id}
+                      assignment={assignment}
+                      chore={chore}
+                      member={member}
+                      isCompact={true}
+                    />
+                  );
+                })}
+              </div>
+              <a href="/chores" className="text-primary-600 dark:text-primary-400 font-semibold mt-4 inline-block hover:underline">
+                View all assignments →
+              </a>
+            </section>
+          )}
+
+          {assignments.length === 0 && (
+            <div className="card text-center py-12">
+              <p className="text-slate-500 dark:text-slate-400 mb-4">
+                No assignments yet. Get started by creating chores and assigning them to members!
+              </p>
+              <a href="/chores" className="btn-primary">
+                Create First Assignment
+              </a>
+            </div>
           )}
         </div>
-      </div>
-
-      {/* Upcoming Practices */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Upcoming Practices</h2>
-        <div className="space-y-4">
-          {upcomingPractices.map((practice) => (
-            <div
-              key={practice.id}
-              className="bg-white rounded-lg p-6 shadow-md border-l-4 border-l-choir-purple"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-800">{practice.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{practice.focusArea}</p>
-                  <div className="flex gap-4 mt-3 flex-wrap text-sm text-gray-600">
-                    <span>📅 {new Date(practice.date).toLocaleDateString()}</span>
-                    <span>🕐 {practice.time}</span>
-                    <span>⏱️ {practice.duration} min</span>
-                    <span>👥 {practice.attendees.length} attending</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

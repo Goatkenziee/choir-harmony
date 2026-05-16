@@ -1,63 +1,42 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
-import { Music, Users, CheckSquare, Calendar } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { Home, CheckSquare, Users, Trophy, Settings } from 'lucide-react';
 
-export default function Navigation() {
+export function Navigation() {
   const pathname = usePathname();
 
-  const isActive = (path: string) => {
-    return pathname === path
-      ? 'text-choir-purple font-bold'
-      : 'text-gray-600 hover:text-choir-purple';
-  };
+  const navItems = [
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/chores', label: 'Chores', icon: CheckSquare },
+    { href: '/members', label: 'Members', icon: Users },
+    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-lg">
-      <div className="container mx-auto px-4 py-4 max-w-7xl">
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
-            <Music className="w-8 h-8 text-choir-purple animate-bounce" />
-            <span className="bg-gradient-to-r from-choir-purple to-choir-pink bg-clip-text text-transparent">
-              Choir Harmony
-            </span>
-          </Link>
-        </div>
-
-        <div className="flex gap-6 flex-wrap">
-          <Link
-            href="/"
-            className={`flex items-center gap-2 transition-colors ${isActive('/')}`}
-          >
-            <CheckSquare className="w-5 h-5" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </Link>
-
-          <Link
-            href="/members"
-            className={`flex items-center gap-2 transition-colors ${isActive('/members')}`}
-          >
-            <Users className="w-5 h-5" />
-            <span className="hidden sm:inline">Members</span>
-          </Link>
-
-          <Link
-            href="/tasks"
-            className={`flex items-center gap-2 transition-colors ${isActive('/tasks')}`}
-          >
-            <CheckSquare className="w-5 h-5" />
-            <span className="hidden sm:inline">Tasks</span>
-          </Link>
-
-          <Link
-            href="/practice"
-            className={`flex items-center gap-2 transition-colors ${isActive('/practice')}`}
-          >
-            <Calendar className="w-5 h-5" />
-            <span className="hidden sm:inline">Practice</span>
-          </Link>
-        </div>
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-xl md:static md:border-r md:border-t-0 md:w-64 md:h-screen md:flex md:flex-col md:shadow-lg">
+      <div className="grid grid-cols-5 gap-1 p-2 md:flex md:flex-col md:gap-0 md:p-4">
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center justify-center md:justify-start gap-3 px-3 py-3 rounded-lg font-medium transition-all duration-200 ${
+                isActive
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+              aria-label={label}
+            >
+              <Icon className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="hidden md:inline text-sm">{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
